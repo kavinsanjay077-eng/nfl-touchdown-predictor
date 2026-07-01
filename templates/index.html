@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NFL Touchdown Predictor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0e1a;
+      color: #e8eaf0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+
+    .header h1 span {
+      color: #e8a020;
+    }
+
+    .header p {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #7a8099;
+    }
+
+    .card {
+      background: #131929;
+      border: 1px solid #1e2840;
+      border-radius: 16px;
+      padding: 36px;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #e8a020;
+      margin-bottom: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #9aa0b8;
+      letter-spacing: 0.3px;
+    }
+
+    input, select {
+      background: #0d1220;
+      border: 1px solid #2a3250;
+      border-radius: 8px;
+      color: #e8eaf0;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      border-color: #e8a020;
+    }
+
+    select option {
+      background: #131929;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #1e2840;
+      margin: 24px 0;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: #e8a020;
+      color: #0a0e1a;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover { background: #f0b030; }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .result-box {
+      margin-top: 24px;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      border: 1px solid #2a3250;
+      background: #0d1220;
+    }
+
+    .result-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #7a8099;
+      margin-bottom: 10px;
+    }
+
+    .result-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #e8a020;
+    }
+
+    .result-confidence {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #9aa0b8;
+    }
+
+    .hint {
+      font-size: 0.72rem;
+      color: #4a5270;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>NFL <span>Touchdown</span> Predictor</h1>
+    <p>Enter game situation details to predict touchdown probability</p>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="/predict">
+
+      <div class="section-label">Game Situation</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Quarter</label>
+          <select name="qtr">
+            <option value="1">Q1</option>
+            <option value="2">Q2</option>
+            <option value="3">Q3</option>
+            <option value="4">Q4</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Down</label>
+          <select name="down">
+            <option value="1">1st Down</option>
+            <option value="2">2nd Down</option>
+            <option value="3">3rd Down</option>
+            <option value="4">4th Down</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Time Remaining (seconds)</label>
+          <input type="number" name="time_secs" placeholder="e.g. 1800" min="0" max="3600" required />
+          <span class="hint">3600 = start of game</span>
+        </div>
+        <div class="field">
+          <label>Play Type</label>
+          <select name="play_type">
+            <option value="Pass">Pass</option>
+            <option value="Run">Run</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+      <div class="section-label">Field Position</div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Yard Line (from own end zone)</label>
+          <input type="number" name="yrdline100" placeholder="e.g. 75" min="1" max="99" required />
+          <span class="hint">1 = opponent's goal line, 99 = own goal line</span>
+        </div>
+        <div class="field">
+          <label>Yards to Go</label>
+          <input type="number" name="ydstogo" placeholder="e.g. 10" min="1" max="99" required />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Goal to Go?</label>
+          <select name="goal_to_go">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Score Difference</label>
+          <input type="number" name="score_diff" placeholder="e.g. -7" required />
+          <span class="hint">Positive = winning, Negative = losing</span>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+      <div class="section-label">Timeouts Remaining</div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label>Possession Team</label>
+          <select name="posteam_timeouts">
+            <option value="3">3</option>
+            <option value="2">2</option>
+            <option value="1">1</option>
+            <option value="0">0</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Home Team</label>
+          <select name="home_timeouts">
+            <option value="3">3</option>
+            <option value="2">2</option>
+            <option value="1">1</option>
+            <option value="0">0</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Away Team</label>
+          <select name="away_timeouts">
+            <option value="3">3</option>
+            <option value="2">2</option>
+            <option value="1">1</option>
+            <option value="0">0</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn">PREDICT →</button>
+    </form>
+
+    {% if prediction %}
+    <div class="result-box">
+      <div class="result-label">Prediction</div>
+      <div class="result-value">{{ prediction }}</div>
+      <div class="result-confidence">TD Probability: {{ confidence }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+</body>
+</html>
